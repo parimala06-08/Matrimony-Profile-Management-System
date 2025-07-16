@@ -1,0 +1,129 @@
+import sqlite3
+import random
+
+def create_table():
+    conn = sqlite3.connect("matrimony.db")
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS profiles (
+                    id INTEGER PRIMARY KEY,
+                    name TEXT,
+                    dob TEXT,
+                    gender TEXT,
+                    hobbies TEXT,
+                    age_range TEXT
+                )''')
+    conn.commit()
+    conn.close()
+
+def register():
+    conn = sqlite3.connect("matrimony.db")
+    c = conn.cursor()
+
+    name = input("Enter Name: ")
+    dob = input("Enter DOB (YYYY-MM-DD): ")
+    gender = input("Enter Gender (Male/Female): ")
+    hobbies = input("Enter Hobbies: ")
+    age_range = input("Enter Age Range Looking For: ")
+
+    profile_id = random.randint(1000, 9999)
+    c.execute("INSERT INTO profiles (id, name, dob, gender, hobbies, age_range) VALUES (?, ?, ?, ?, ?, ?)",
+              (profile_id, name, dob, gender, hobbies, age_range))
+
+    conn.commit()
+    conn.close()
+    print(f"✅ Profile Registered with ID: {profile_id}")
+
+def update_profile():
+    conn = sqlite3.connect("matrimony.db")
+    c = conn.cursor()
+
+    pid = input("Enter Profile ID to Update: ")
+    name = input("Enter New Name: ")
+    c.execute("UPDATE profiles SET name=? WHERE id=?", (name, pid))
+
+    conn.commit()
+    conn.close()
+    print("✅ Profile Updated Successfully.")
+
+def delete_profile():
+    conn = sqlite3.connect("matrimony.db")
+    c = conn.cursor()
+
+    pid = input("Enter Profile ID to Delete: ")
+    c.execute("DELETE FROM profiles WHERE id=?", (pid,))
+
+    conn.commit()
+    conn.close()
+    print("✅ Profile Deleted Successfully.")
+
+def search_by_id():
+    conn = sqlite3.connect("matrimony.db")
+    c = conn.cursor()
+
+    pid = input("Enter Profile ID to Search: ")
+    c.execute("SELECT * FROM profiles WHERE id=?", (pid,))
+    data = c.fetchone()
+    if data:
+        print("🔍 Profile Found:")
+        print(data)
+    else:
+        print("❌ Profile Not Found.")
+
+    conn.close()
+
+def show_matching_profiles():
+    conn = sqlite3.connect("matrimony.db")
+    c = conn.cursor()
+
+    pid = input("Enter Your Profile ID to Find Matches: ")
+    c.execute("SELECT * FROM profiles WHERE id=?", (pid,))
+    user = c.fetchone()
+
+    if user:
+        user_gender = user[3]
+        opposite_gender = "Female" if user_gender.lower() == "male" else "Male"
+
+        c.execute("SELECT * FROM profiles WHERE gender=? AND id!=? ORDER BY RANDOM() LIMIT 5",
+                  (opposite_gender, pid))
+        matches = c.fetchall()
+
+        print("\n💞 Matching Profiles:")
+        for m in matches:
+            print(m)
+    else:
+        print("❌ Your profile not found.")
+
+    conn.close()
+
+def main():
+    create_table()
+    while True:
+        print("\n📋 Menu:")
+        print("1. Register")
+        print("2. Update Profile")
+        print("3. Delete Profile")
+        print("4. Search Profile By ID")
+        print("5. Show Matching Profiles")
+        print("6. EXIT")
+
+        choice = input("Enter your choice: ")
+
+        if choice == '1':
+            register()
+        elif choice == '2':
+            update_profile()
+        elif choice == '3':
+            delete_profile()
+        elif choice == '4':
+            search_by_id()
+        elif choice == '5':
+            show_matching_profiles()
+        elif choice == '6':
+            print("👋 Exiting... Goodbye!")
+            break
+        else:
+            print("❗ Invalid option. Please try again.")
+
+
+if __name__ == "__main__":
+    main()
